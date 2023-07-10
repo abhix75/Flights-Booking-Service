@@ -55,9 +55,37 @@ class BookingRepository extends CrudRepository {
         });
         return response;
     }
+
+    async getAll(timestamp)
+    {
+        const response = await Booking.findAll({
+            where: {
+                [Op.and]:[
+                    {
+                        createdAt:{
+                            [Op.lt]:timestamp
+                        }
+                    },
+                    {
+                        status:{
+                            [Op.ne]:BOOKED
+                        }
+                    },
+                    {
+                        status:{
+                            [Op.ne]:CANCELLED
+                        }
+                    }
+                ]
+            }
+        });
+        return response;
+
+    }
+    }
      
 
-}
+
 
    
 module.exports = BookingRepository;
