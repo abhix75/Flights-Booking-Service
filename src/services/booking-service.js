@@ -201,21 +201,23 @@ We will use a package called node-cron.
 async function cancelOldBookings() {
   try {
     console.log("INSIDE SERVICES");
-    const time = new Date(Date.now() - 1000 * 300);
+    const time = new Date(Date.now() - 1000 * 60);
     const allBookingDetails = await bookingRepository.getAll(time);
+    console.log("allBookingDetails =", allBookingDetails);
     for (const booking of allBookingDetails) {
-      const { flightId, noOfSeats } = booking.dataValues;
+      const { flightId, noofSeats } = booking.dataValues;
 
       await axios.patch(
         `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${flightId}/seats`,
         {
-          seats: noOfSeats,
-          dec: 0,
+          seats: noofSeats,
+          dec:0,
         }
       );
     }
-
+    
     const response = await bookingRepository.cancelOldBookings(time);
+
     await transaction.commit();
     return response;
   } catch (error) {
