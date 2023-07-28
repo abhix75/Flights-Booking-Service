@@ -6,7 +6,7 @@ const { StatusCodes } = require("http-status-codes");
 const { Enums } = require("../utils/common");
 const { BOOKED, CANCELLED } = Enums.Booking_status;
 const { BookingRepository } = require("../repositories");
-const { ServerConfig } = require("../config");
+const { ServerConfig ,Queue} = require("../config");
 const db = require("../models");
 const AppError = require("../utils/error/app-error");
 const bookingRepository = new BookingRepository();
@@ -101,6 +101,11 @@ async function makePayment(data) {
       { status: BOOKED },
       transaction
     );
+    Queue.sendData({
+      recepientEmail: 'abhijitmishraak10@gmail.com',
+      subject: 'Flight booked',
+      text: `Booking successfully done for the booking ${data.bookingId}`
+  });
 
     await axios.patch(
         `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${bookingDetails.flightId}/seats`,
