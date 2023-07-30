@@ -35,10 +35,13 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue:1
     },
+
+
     totalCost:{
       type:DataTypes.INTEGER,
       allowNull: false,
     },
+  
   }, {
     sequelize,
     modelName: 'Booking',

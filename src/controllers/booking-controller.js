@@ -9,7 +9,10 @@ async function createBooking(req, res) {
         const response = await BookingService.createBooking({
             flightId: req.body.flightId,
             userId: req.body.userId,
-            noofSeats: req.body.noofSeats
+            noofSeats: req.body.noofSeats,
+            
+
+    
         });
         SuccessResponse.data = response;
         return res
@@ -17,6 +20,7 @@ async function createBooking(req, res) {
                 .json(SuccessResponse);
     } catch(error) {
         console.log("controller catching")
+        console.log(error)
         ErrorResponse.error = error;
         return res
                 .status(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -26,8 +30,9 @@ async function createBooking(req, res) {
 
 async function makePayment(req, res) {
     try {
-
         const idempotencyKey = req.headers["x-idempotency-key"];
+        console.log(idempotencyKey)
+        const name = req.headers["name"];
 
         if(!idempotencyKey)
         {
@@ -45,7 +50,10 @@ async function makePayment(req, res) {
         const response = await BookingService.makePayment({
             totalCost: req.body.totalCost,
             userId: req.body.userId,
-            bookingId: req.body.bookingId
+            bookingId: req.body.bookingId,
+            name:req.headers.name,
+            email:req.headers.email
+
         });
         SuccessResponse.data = response;
         return res

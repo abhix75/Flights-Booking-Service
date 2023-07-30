@@ -20,7 +20,7 @@ async function createBooking(data) {
 */
 
   // This is a Managed Transactions -> committing and rolling back the transaction should be done manually by the user (by calling the appropriate Sequelize methods).
-
+console.log('inside service create booking');
   const transaction = await db.sequelize.transaction(); // Whenever I need to wrap a query within a transaction, I use the transaction object. I can pass the `transaction` object.
   // Wrapping all of these in 1 transaction
 
@@ -41,7 +41,7 @@ async function createBooking(data) {
     // When users send somethings we have currently userId, noOfSeats, flightId. In order to create a booking we need a totalCost as well so destructuring the object `data` using the spread operator `...data` and then adding one more key-value pair
     console.log("BookingPayLoad : ", bookingPayload);
     const booking = await bookingRepository.create(bookingPayload, transaction);
-
+    console.log("after booking repo ")
     // This is going to create a new booking for us and will be in an `INITIATED` state and the transaction will reserve the selected number of seats for the current booking for 5 mins for the end users to actually complete the payment, if not completed the payment on time then whatever no. of seats blocked by the transaction for the current booking should be released.
     await axios.patch(
       `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${data.flightId}/seats`,
@@ -101,23 +101,68 @@ async function makePayment(data) {
       { status: BOOKED },
       transaction
     );
-    Queue.sendData({
-      recepientEmail: 'abhijitmishraak10@gmail.com',
-      subject: 'Flight booked',
-      text: `Booking successfully done for the booking ${data.bookingId}`
-  });
 
-    await axios.patch(
-        `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${bookingDetails.flightId}/seats`,
-        {
-          seats: bookingDetails.noofSeats,
-          dec: 0,
-        }
-      );
+  const flight = await axios.get(
+    `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${bookingDetails.flightId}`
+  );
+
+  const flightData = flight.data.data;
+  console.log(flightData)
+  const flightDepartureTime = new Date(flightData.departureTime);
+  const flightArrivalTime = new Date(flightData.arrivalTime);
+  console.log( "data==>",data);
+  Queue.sendData({
+    recepientEmail: data.email,
+    subject: "Flight Booking Confirmation",
+    text: `Dear ${data.name},
+
+We are pleased to inform you that your flight has been successfully booked. We understand the importance of your travel plans, and we are excited to be a part of your journey.
+    
+Booking Details:
+Flight Number: ${flightData.id}
+Departure: ${
+      flightData.departureAirportId
+    } at ${flightDepartureTime.toLocaleString()}
+Arrival: ${flightData.arrivalAirportId} at ${flightArrivalTime.toLocaleString()}
+   
+Passenger Details:
+Email: ${data.email}
+  
+Please note the following important information:
+  
+1. Flight Itinerary:     
+- Departure: ${
+ flightData.departureAirportId
+} on ${flightDepartureTime.toLocaleString()}
+- Arrival: ${
+ flightData.arrivalAirportId
+} on ${flightArrivalTime.toLocaleString()}
+
+2. Check-in:    
+- Please arrive at the airport at least 2 Hrs before the scheduled departure time.
+- Carry a valid photo ID for security and check-in purposes.
+
+3. Baggage:
+- Please review the baggage allowance for your flight. Exceeding the permitted limits may incur additional charges.
+
+4. Travel Documents:
+- Ensure that you have all the necessary travel documents, such as a valid passport, visa, or any required identification.
+
+5. Cancellation or Changes:
+- If you need to cancel or make changes to your booking, please contact our customer support team as soon as possible. Applicable fees and conditions may apply.
+
+We hope you have a pleasant flight experience with us. Should you have any questions or require further assistance, please do not hesitate to contact our customer support team at abhixairline.support@gmail.com.
+    
+Thank you for choosing our services, and we look forward to serving you.
+
+Best regards,
+ABHIX AirLine`});
+
 
     await transaction.commit();
 
   } catch (error) {
+    console.log(error)
     await transaction.rollback();
 
     if (error.statusCodes == StatusCodes.BAD_REQUEST) {

@@ -10,6 +10,7 @@ class BookingRepository extends CrudRepository {
     }
 
     async createBooking(data,transaction){
+        console.log("inside create repo")
         const response = await Booking.create(data,{transaction:transaction});
         return response;
     }
