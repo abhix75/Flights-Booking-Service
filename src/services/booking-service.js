@@ -103,30 +103,38 @@ async function makePayment(data) {
     );
 
   const flight = await axios.get(
+
     `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${bookingDetails.flightId}`
   );
+  
+  const user = await axios.get(
 
+    `${ServerConfig.API_GATEWAY}/api/v1/user/${bookingDetails.userId}`
+  );
+ 
+  const UserData = user.data.data;
+  console.log("USER ",UserData)
   const flightData = flight.data.data;
-  console.log(flightData)
+  console.log("flightData",flightData)
   const flightDepartureTime = new Date(flightData.departureTime);
   const flightArrivalTime = new Date(flightData.arrivalTime);
   console.log( "data==>",data);
   Queue.sendData({
-    recepientEmail: data.email,
+    recepientEmail: UserData.email,
     subject: "Flight Booking Confirmation",
     text: `Dear ${data.name},
 
 We are pleased to inform you that your flight has been successfully booked. We understand the importance of your travel plans, and we are excited to be a part of your journey.
     
 Booking Details:
-Flight Number: ${flightData.id}
+Flight Number: ${flightData.flightNumber}
 Departure: ${
       flightData.departureAirportId
     } at ${flightDepartureTime.toLocaleString()}
 Arrival: ${flightData.arrivalAirportId} at ${flightArrivalTime.toLocaleString()}
    
 Passenger Details:
-Email: ${data.email}
+Email: ${UserData.email}
   
 Please note the following important information:
   
