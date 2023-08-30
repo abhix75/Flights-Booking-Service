@@ -67,11 +67,32 @@ async function makePayment(req, res) {
                 .json(ErrorResponse);
     }
 }
+async function getBookings(req,res)
+{
+    try {
+        const bookings = await BookingService.getAllBookings(req.params.id);
+        console.log(bookings)
+        if(!bookings) return res
+                               .status(StatusCodes.OK)
+                               .json(ErrorResponse)
+        SuccessResponse.data=bookings;
+        return res 
+                 .status(StatusCodes.OK)
+                 .json(SuccessResponse)
+                 
+    } catch (error) {
+        ErrorResponse.error=error;
+        return res 
+                 .status(error.statusCodes)
+                 .json(ErrorResponse)
+    }
+}
 
 
 
 module.exports = {
 
     createBooking,
-    makePayment
+    makePayment,
+    getBookings
 }

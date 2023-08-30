@@ -2,6 +2,7 @@ const { StatusCodes } = require('http-status-codes');
 const{Enums}=require('../utils/common');
 const{BOOKED,CANCELLED}=Enums.Booking_status;
 const { Booking } = require('../models');
+const AppError = require('../utils/error/app-error')
 const CrudRepository = require('./crud-repositort');
 const {Op}=require("sequelize");
 class BookingRepository extends CrudRepository {
@@ -20,6 +21,19 @@ class BookingRepository extends CrudRepository {
         const response = await Booking.findByPk(data, {transaction: transaction});
         if(!response) {
             throw new AppError('Not able to fund the resource', StatusCodes.NOT_FOUND);
+        }
+        return response;
+    }
+    async getByid(id) {
+        console.log("IN get")
+        const response = await Booking.findAll({
+            where:{
+                userId:id
+            }
+        })
+        console.log(`Total Booking by User-Id ${id}`,response.length)
+        if(response.length == 0) {
+            throw new AppError('Not user present for this id', StatusCodes.NOT_FOUND);
         }
         return response;
     }
@@ -58,7 +72,7 @@ class BookingRepository extends CrudRepository {
         return response;
     }
 
-    async getAll(timestamp)
+    async getAll(data,timestamp)
     {
         const response = await Booking.findAll({
             where: {
@@ -77,6 +91,9 @@ class BookingRepository extends CrudRepository {
                         status:{
                             [Op.ne]:CANCELLED
                         }
+                    },
+                    { 
+                        id:data.id
                     }
                 ]
             }

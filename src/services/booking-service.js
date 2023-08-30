@@ -58,6 +58,20 @@ console.log('inside service create booking');
     throw error;
   }
 }
+async function getAllBookings(id)
+{
+    try {
+        const airplane = await bookingRepository.getByid(id);
+        return airplane;
+    } catch (error) {
+      console.log(error)
+        if(error.statusCodes==StatusCodes.NOT_FOUND)
+        {
+            throw new AppError("No User exist for the given id",error.statusCodes)
+        }
+       throw new AppError("No User exist for the given id",StatusCodes.INTERNAL_SERVER_ERROR); 
+    }
+}
 
 async function makePayment(data) {
   const transaction = await db.sequelize.transaction();
@@ -291,5 +305,6 @@ module.exports = {
   createBooking,
   makePayment,
   cancelOldBookings,
-  cancelBooking
+  cancelBooking,
+  getAllBookings
 };
