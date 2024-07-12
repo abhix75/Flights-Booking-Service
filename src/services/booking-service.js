@@ -74,6 +74,7 @@ async function getAllBookings(id)
 }
 
 async function makePayment(data) {
+  console.log("Data",data)
   const transaction = await db.sequelize.transaction();
   try {
     const bookingDetails = await bookingRepository.get(
@@ -89,7 +90,7 @@ async function makePayment(data) {
         StatusCodes.BAD_REQUEST
       );
     }
-    console.log(bookingDetails);
+    console.log("bookingDetails",bookingDetails);
     const bookingTime = new Date(bookingDetails.createdAt);
     const currentTime = new Date();
     if (currentTime - bookingTime > 300000) {
@@ -120,14 +121,15 @@ async function makePayment(data) {
 
     `${ServerConfig.FLIGHT_SERVICE}/api/v1/flight/${bookingDetails.flightId}`
   );
-  
+ 
   const user = await axios.get(
 
     `${ServerConfig.API_GATEWAY}/api/v1/user/${bookingDetails.userId}`
   );
+  console.log("user-----",user)
  
   const UserData = user.data.data;
-  console.log("USER ",UserData)
+  console.log("USER-Data",UserData)
   const flightData = flight.data.data;
   console.log("flightData",flightData)
   const flightDepartureTime = new Date(flightData.departureTime);
@@ -136,7 +138,7 @@ async function makePayment(data) {
   Queue.sendData({
     recepientEmail: UserData.email,
     subject: "Flight Booking Confirmation",
-    text: `Dear ${data.name},
+    text: `Dear ${UserData.name},
 
 We are pleased to inform you that your flight has been successfully booked. We understand the importance of your travel plans, and we are excited to be a part of your journey.
     
@@ -273,9 +275,9 @@ We will use a package called node-cron.
 async function cancelOldBookings() {
   try {
     console.log("INSIDE SERVICES");
-    const time = new Date(Date.now() - 1000 * 60);
-    const allBookingDetails = await bookingRepository.getAll(time);
-    console.log("allBookingDetails =", allBookingDetails);
+    const time = new Date(Date.now() - 1000 * 300);
+    const allBookingDetails = await bookingRepository.getAll(time, {});
+    //console.log("allBookingDetails =", allBookingDetails);
     for (const booking of allBookingDetails) {
       const { flightId, noofSeats } = booking.dataValues;
 

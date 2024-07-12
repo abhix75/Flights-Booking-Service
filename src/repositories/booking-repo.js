@@ -72,34 +72,27 @@ class BookingRepository extends CrudRepository {
         return response;
     }
 
-    async getAll(data,timestamp)
-    {
-        const response = await Booking.findAll({
-            where: {
-                [Op.and]:[
-                    {
-                        createdAt:{
-                            [Op.lt]:timestamp
-                        }
-                    },
-                    {
-                        status:{
-                            [Op.ne]:BOOKED
-                        }
-                    },
-                    {
-                        status:{
-                            [Op.ne]:CANCELLED
-                        }
-                    },
-                    { 
-                        id:data.id
-                    }
-                ]
-            }
-        });
-        return response;
+    async getAll(timestamp, data = {}) {
+        console.log("IN getAll");
+        const whereConditions = {
+            createdAt: { [Op.lt]: timestamp },
+            status: { [Op.notIn]: [BOOKED, CANCELLED] },
+        };
 
+        if (data.id) {
+            whereConditions.id = data.id;
+        }
+
+        try {
+            const response = await Booking.findAll({
+                where: whereConditions
+            });
+           // console.log("response", response);
+            return response;
+        } catch (error) {
+            console.error("Error in getAll:", error);
+            throw error;
+        }
     }
     }
      
